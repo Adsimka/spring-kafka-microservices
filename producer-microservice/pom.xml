@@ -8,11 +8,11 @@
 		<version>3.3.2</version>
 		<relativePath/>
 	</parent>
-	<groupId>spring-kafka-consumer</groupId>
-	<artifactId>consumer</artifactId>
+	<groupId>spring-kafka-producer</groupId>
+	<artifactId>producer-microservice</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>consumer</name>
-	<description>Demo project for Spring Kafka - Consumer</description>
+	<name>producer</name>
+	<description>Demo project for Spring Kafka - Producer</description>
 	<url/>
 	<licenses>
 		<license/>
