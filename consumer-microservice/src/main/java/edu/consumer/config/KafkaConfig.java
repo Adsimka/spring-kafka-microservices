@@ -1,6 +1,7 @@
 package edu.consumer.config;
 
 import edu.consumer.event.ProductCreatedEvent;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -27,23 +28,28 @@ public class KafkaConfig {
 
     @Bean
     public ConsumerFactory<String, ProductCreatedEvent> consumerFactory() {
-        Map<String, Object> config = new HashMap();
+        Map<String, Object> config = new HashMap<>();
 
-        config.put("bootstrap.servers", bootstrapServers);
-        config.put("key.deserializer", StringDeserializer.class);
-        config.put("value.deserializer", JsonDeserializer.class);
-        config.put("spring.json.use.type.headers", false);
-        config.put("spring.json.value.default.type", ProductCreatedEvent.class);
-        config.put("group.id", groupId);
-        config.put("spring.json.trusted.packages", trustedPackages);
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackages);
 
-        return new DefaultKafkaConsumerFactory(config);
+        return new DefaultKafkaConsumerFactory<>(
+                config,
+                new StringDeserializer(),
+                new JsonDeserializer<>(ProductCreatedEvent.class)
+        );
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> factory = new ConcurrentKafkaListenerContainerFactory();
-        factory.setConsumerFactory(this.consumerFactory());
+    public ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> kafkaListenerContainerFactory(
+            ConsumerFactory<String, ProductCreatedEvent> consumerFactory
+    ) {
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent>();
+        factory.setConsumerFactory(consumerFactory);
 
         return factory;
     }
