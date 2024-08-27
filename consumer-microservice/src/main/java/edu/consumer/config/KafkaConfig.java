@@ -1,6 +1,8 @@
 package edu.consumer.config;
 
 import edu.consumer.event.ProductCreatedEvent;
+import edu.consumer.exception.NotRetryableException;
+import edu.consumer.exception.RetryableException;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -15,6 +17,7 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +35,7 @@ public class KafkaConfig {
     private String trustedPackages;
 
     @Bean
-    public ConsumerFactory<String, ProductCreatedEvent> consumerFactory() {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
 
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -42,17 +45,24 @@ public class KafkaConfig {
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackages);
+        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, ProductCreatedEvent.class);
 
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent> kafkaListenerContainerFactory(
-            ConsumerFactory<String, ProductCreatedEvent> consumerFactory,
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory,
             KafkaTemplate<String, Object> kafkaTemplate
     ) {
-        var errorHandler = new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate));
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, ProductCreatedEvent>();
+        var errorHandler = new DefaultErrorHandler(
+                new DeadLetterPublishingRecoverer(kafkaTemplate),
+                new FixedBackOff(3000, 3)
+        );
+        errorHandler.addRetryableExceptions(RetryableException.class);
+        errorHandler.addNotRetryableExceptions(NotRetryableException.class);
+
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, Object>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(errorHandler);
 
