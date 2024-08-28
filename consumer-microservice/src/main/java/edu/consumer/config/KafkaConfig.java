@@ -1,8 +1,8 @@
 package edu.consumer.config;
 
-import edu.consumer.event.ProductCreatedEvent;
 import edu.consumer.exception.NotRetryableException;
 import edu.consumer.exception.RetryableException;
+import event.ProductCreatedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -42,10 +42,8 @@ public class KafkaConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
-        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackages);
-        config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, ProductCreatedEvent.class);
 
         return new DefaultKafkaConsumerFactory<>(config);
     }

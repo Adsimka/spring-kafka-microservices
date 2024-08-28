@@ -1,6 +1,6 @@
 package edu.consumer.handler;
 
-import edu.consumer.event.ProductCreatedEvent;
+import event.ProductCreatedEvent;
 import edu.consumer.exception.NotRetryableException;
 import edu.consumer.exception.RetryableException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class ProductCreatedEventHandler {
 
-    private static final String URL = "http://localhost:8095/response/500";
+    private static final String URL = "http://localhost:8095/response/200";
 
     private final RestTemplate restTemplate;
 
